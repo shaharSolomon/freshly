@@ -2,11 +2,13 @@ import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/auth';
+import { IS_LOCAL } from '@/services/demo';
 import { spacing, useTheme } from '@/theme';
 
 const POINTS = [
-  ['📷', 'מצלמים קבלה, וכל הקנייה נכנסת למלאי'],
-  ['⏰', 'מקבלים תזכורת יום לפני שמשהו מתקלקל'],
+  IS_LOCAL ? ['✍️', 'מוסיפים מוצר בשתי נגיעות, התוקף מוערך לבד'] : ['📷', 'מצלמים קבלה, וכל הקנייה נכנסת למלאי'],
+  IS_LOCAL ? ['⏰', 'רואים מה צריך לאכול היום, לפני שזה מתקלקל'] : ['⏰', 'מקבלים תזכורת יום לפני שמשהו מתקלקל'],
+  ['🍳', 'מתכונים ממה שעומד לפוג, ורשימת קניות שמתמלאת לבד'],
   ['₪', 'רואים כמה כסף חסכתם כל חודש'],
 ];
 
@@ -28,8 +30,10 @@ export default function WelcomeScreen() {
         ))}
       </View>
       <View style={styles.bottom}>
-        <PrimaryButton label="בואו נתחיל" onPress={() => router.push('/sign-in')} />
-        <Text style={[styles.small, { color: theme.muted }]}>הרשמה וכניסה עם מספר הטלפון. בלי סיסמה.</Text>
+        <PrimaryButton label="בואו נתחיל" onPress={() => router.push(IS_LOCAL ? '/name' : '/sign-in')} />
+        <Text style={[styles.small, { color: theme.muted }]}>
+          {IS_LOCAL ? 'רק שם, בלי הרשמה. הכל נשמר בטלפון שלכם.' : 'הרשמה וכניסה עם מספר הטלפון. בלי סיסמה.'}
+        </Text>
       </View>
     </View>
   );

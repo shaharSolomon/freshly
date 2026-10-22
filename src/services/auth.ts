@@ -9,6 +9,7 @@ import { getSupabase } from './supabase';
 
 export interface AuthUser {
   id: string;
+  /** Empty in local mode, where sign-up is just a name. */
   phone: string;
   name?: string;
 }

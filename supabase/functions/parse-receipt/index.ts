@@ -18,7 +18,8 @@ const ReceiptSchema = z.object({
   items: z.array(
     z.object({
       name: z.string().describe('Short everyday Hebrew product name, e.g. "קוטג׳ 5%" not the full SKU text'),
-      quantity: z.number().describe('Number of units bought; for items sold by weight use 1'),
+      quantity: z.number().describe('Number of units bought, or the weight in kg for items sold by weight'),
+      unit: z.enum(['unit', 'kg']).describe('"kg" when the line is priced by weight (produce, meat, fish), else "unit"'),
       price: z.number().nullable().describe('Total line price in NIS after discounts, or null if unreadable'),
       category: z.enum(CATEGORIES),
       shelf_life_days: z.number().nullable().describe('Typical days until it should be used, refrigerated where relevant'),

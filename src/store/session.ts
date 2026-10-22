@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { AuthUser } from '@/services/auth';
-import { IS_DEMO } from '@/services/demo';
+import { IS_DEMO, IS_LOCAL } from '@/services/demo';
 
 export type SecondFactor = 'biometric' | 'pin';
 
@@ -37,7 +37,7 @@ export const useSession = create<SessionState>()(
       signOut: () => set({ user: null, secondFactor: null, unlocked: false }),
     }),
     {
-      name: IS_DEMO ? 'freshly-demo-session' : 'freshly-session',
+      name: IS_DEMO ? 'freshly-demo-session' : IS_LOCAL ? 'freshly-local-session' : 'freshly-session',
       version: 1,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({ user: s.user, secondFactor: s.secondFactor }),

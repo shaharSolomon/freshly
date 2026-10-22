@@ -6,6 +6,7 @@ import { AppState, I18nManager, Platform, View } from 'react-native';
 
 import { addDays, toDateKey } from '@/domain/dates';
 import { ACTION_EATEN, ACTION_STILL_HAVE, ACTION_THROWN, setupReminders, syncReminders } from '@/services/reminders';
+import { IS_LOCAL } from '@/services/demo';
 import { usePantry } from '@/store/pantry';
 import { useSession } from '@/store/session';
 import { useTheme } from '@/theme';
@@ -19,6 +20,8 @@ if (!I18nManager.isRTL) {
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   document.documentElement.dir = 'rtl';
   document.documentElement.lang = 'he';
+  // Local mode keeps the pantry only in this browser; ask it not to evict the data.
+  if (IS_LOCAL) navigator.storage?.persist?.().catch(() => {});
 }
 
 function handleResponse(response: Notifications.NotificationResponse) {
@@ -46,9 +49,11 @@ const RELOCK_AFTER_MS = 5 * 60 * 1000;
 
 export default function RootLayout() {
   const theme = useTheme();
-  const { hydrated, user, secondFactor, unlocked } = useSession();
+  const { hydrated, user, secondFactor, unlocked: sessionUnlocked } = useSession();
   const signedIn = Boolean(user);
-  const enrolled = signedIn && secondFactor !== null;
+  // Local mode has no account to protect, so there is no second factor or lock.
+  const enrolled = signedIn && (IS_LOCAL || secondFactor !== null);
+  const unlocked = IS_LOCAL || sessionUnlocked;
   // Where a blocked route sends the user: the next step they still owe.
   const entry = !signedIn ? '/welcome' : !enrolled ? '/secure' : !unlocked ? '/unlock' : '/';
 
@@ -100,6 +105,7 @@ export default function RootLayout() {
         </Stack.Protected>
         <Stack.Protected guard={!signedIn} redirectTo={entry}>
           <Stack.Screen name="welcome" options={{ headerShown: false }} />
+          <Stack.Screen name="name" options={{ title: '' }} />
           <Stack.Screen name="sign-in" options={{ title: '' }} />
           <Stack.Screen name="verify" options={{ title: '' }} />
         </Stack.Protected>

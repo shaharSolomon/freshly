@@ -7,7 +7,14 @@ import type { DraftItem, PantryItem } from '@/domain/types';
  * the receipt scan. Without a Supabase project configured there is no way to
  * sign in, so a fresh clone runs in demo mode too.
  */
-export const IS_DEMO = process.env.EXPO_PUBLIC_DEMO === '1' || !process.env.EXPO_PUBLIC_SUPABASE_URL;
+/**
+ * Local builds (EXPO_PUBLIC_MODE=local) are for real day-to-day use with no
+ * backend at all: sign-up is just a name, the pantry lives on the device and
+ * starts empty, and receipt scanning is off.
+ */
+export const IS_LOCAL = process.env.EXPO_PUBLIC_MODE === 'local';
+
+export const IS_DEMO = !IS_LOCAL && (process.env.EXPO_PUBLIC_DEMO === '1' || !process.env.EXPO_PUBLIC_SUPABASE_URL);
 
 const day = (n: number) => toDateKey(addDays(new Date(), n));
 const ago = (n: number) => addDays(new Date(), -n).toISOString();
@@ -63,8 +70,8 @@ export function demoPantry(): { items: PantryItem[]; purchases: Purchase[] } {
 export function demoReceipt(): Promise<DraftItem[]> {
   const lines: DraftItem[] = [
     { name: 'חלב 3% תנובה', category: 'dairy', quantity: 2, price: 13.8, expiresOn: day(7), expirySource: 'estimated' },
-    { name: 'פרגיות', category: 'meat', quantity: 1, price: 42.9, expiresOn: day(2), expirySource: 'estimated' },
-    { name: 'מלפפונים', category: 'vegetables', quantity: 1, price: 6.5, expiresOn: day(6), expirySource: 'estimated' },
+    { name: 'פרגיות', category: 'meat', quantity: 0.8, unit: 'kg', price: 42.9, expiresOn: day(2), expirySource: 'estimated' },
+    { name: 'מלפפונים', category: 'vegetables', quantity: 1.2, unit: 'kg', price: 6.5, expiresOn: day(6), expirySource: 'estimated' },
     { name: 'בננות', category: 'fruit', quantity: 1, price: 8.9, expiresOn: day(5), expirySource: 'estimated' },
     { name: 'חומוס אחלה', category: 'ready', quantity: 1, price: 9.9, expiresOn: day(5), expirySource: 'estimated' },
     { name: 'פיתות', category: 'bread', quantity: 1, price: 7.9, expiresOn: day(3), expirySource: 'estimated' },

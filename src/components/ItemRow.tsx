@@ -2,7 +2,8 @@ import * as Haptics from 'expo-haptics';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CATEGORIES } from '@/domain/categories';
-import { daysUntil, describeDaysLeft, urgencyOf } from '@/domain/dates';
+import { daysUntil, describeDaysLeft, formatDate, urgencyOf } from '@/domain/dates';
+import { formatQuantity } from '@/domain/expiry';
 import type { PantryItem } from '@/domain/types';
 import { MIN_TAP, radius, spacing, urgencyColor, useTheme } from '@/theme';
 
@@ -18,6 +19,7 @@ export function ItemRow({ item, onEaten, onThrown, onPress }: Props) {
   const days = daysUntil(item.expiresOn);
   const color = urgencyColor(theme, urgencyOf(days));
   const category = CATEGORIES[item.category];
+  const amount = formatQuantity(item.quantity, item.unit);
 
   const tap = (fn: () => void) => () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -37,11 +39,15 @@ export function ItemRow({ item, onEaten, onThrown, onPress }: Props) {
         <View style={styles.texts}>
           <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>
             {item.name}
-            {item.quantity > 1 ? <Text style={{ color: theme.muted }}>{`  ×${item.quantity}`}</Text> : null}
+            {amount ? <Text style={{ color: theme.muted }}>{`  ${amount}`}</Text> : null}
           </Text>
           <Text style={[styles.when, { color }]}>
             {describeDaysLeft(days)}
-            {item.expirySource === 'estimated' ? <Text style={{ color: theme.muted }}> · משוער</Text> : null}
+            <Text style={{ color: theme.muted }}>
+              {' · '}
+              {formatDate(item.expiresOn)}
+              {item.expirySource === 'estimated' ? ' (משוער)' : ''}
+            </Text>
           </Text>
         </View>
       </Pressable>

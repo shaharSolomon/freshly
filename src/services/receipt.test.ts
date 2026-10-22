@@ -15,8 +15,8 @@ describe('linesToDrafts', () => {
       day,
     );
     expect(drafts).toEqual([
-      { name: 'חזה עוף', category: 'meat', quantity: 1, price: 32.9, expiresOn: toDateKey(addDays(day, 2)), expirySource: 'estimated' },
-      { name: 'קוטג׳', category: 'dairy', quantity: 2, price: undefined, expiresOn: toDateKey(addDays(day, 7)), expirySource: 'estimated' },
+      { name: 'חזה עוף', category: 'meat', quantity: 1, unit: 'unit', price: 32.9, expiresOn: toDateKey(addDays(day, 2)), expirySource: 'estimated' },
+      { name: 'קוטג׳', category: 'dairy', quantity: 2, unit: 'unit', price: undefined, expiresOn: toDateKey(addDays(day, 7)), expirySource: 'estimated' },
     ]);
   });
 });

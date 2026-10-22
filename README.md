@@ -4,7 +4,10 @@
 
 **אפליקציה שעוזרת למשפחות להשתמש במה שכבר יש בבית לפני שזה מתקלקל.**
 
-### 👉 [לנסות את הדמו בדפדפן](https://shaharsolomon.github.io/freshly/) · קוד הכניסה: `123456`
+### 👉 [להתחיל להשתמש](https://shaharsolomon.github.io/freshly/app/) · נכנסים עם שם בלבד
+### 👀 [דמו עם נתוני דוגמה](https://shaharsolomon.github.io/freshly/) · קוד הכניסה: `123456`
+
+> **הגרסה לשימוש** (`/app/`) עובדת בלי שרת: נרשמים עם שם בלבד, בלי SMS, והמלאי נשמר רק בטלפון ובדפדפן שבהם משתמשים. מחיקת נתוני הדפדפן מוחקת גם את המלאי, ואין סנכרון בין מכשירים. סריקת קבלות והתראות פוש לא זמינות בגרסה הזו, כי הן צריכות שרת ואפליקציה מותקנת. אפשר להוסיף אותה למסך הבית של הטלפון ("הוספה למסך הבית" בדפדפן).
 
 > **⚠️ פרויקט לתיק עבודות, לא אפליקציה פעילה.** אין שרת מחובר, כך שאי אפשר להירשם עם מספר טלפון אמיתי. כשמריצים את הקוד בלי הגדרות, האפליקציה עולה אוטומטית ב**מצב דמו**: קוד ה-SMS הוא `123456`, טביעת האצבע מדומה, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא בנתוני דוגמה.
 
@@ -24,6 +27,10 @@
 - **התוקף מוערך אוטומטית** לפי סוג המוצר. אפשר לתקן בלחיצה ("מחר", "שבוע"), בלי לוח שנה.
 - **התראה בבוקר שלפני התפוגה** עם שלושה כפתורים: *אכלנו*, *עוד יש*, *נזרק*. המלאי מתעדכן בלי לפתוח את האפליקציה.
 - **לומדת הרגלי קנייה**: אם קונים קוטג' כל שבוע והפעם לא, היא שואלת "חסר לכם קוטג'? כמה יש בבית?" ועונים בלחיצה.
+- **מתכונים ממה שיש בבית**: מתכונים ישראליים פשוטים (שקשוקה, שניצל, לביבות, עוגת בננות...) שממוינים לפי מה שעומד לפוג אצלכם, עם "יש בבית" ו"חסר", והחסרים נכנסים לרשימת הקניות בלחיצה.
+- **רשימת קניות אחת** שמתמלאת לבד: מה שנגמר או נזרק, מה שעניתם "נגמר" בשאלה "חסר לכם?", ומה שחסר למתכון. מסמנים בסופר, ובסוף "קניתי" מכניס הכל למלאי.
+- **תוקף שאפשר לסמוך עליו**: לוח שנה להזנת התאריך מהאריזה, או הערכה לפי המוצר עצמו ולא רק לפי הסוג (עוף טרי כ-2 ימים, בשר טחון יום-יומיים, עלים 3-5 ימים, בצל ותפוחי אדמה כחודש), עם הסבר מאיפה ההערכה. בבדיקת הקבלה כתוב ליד כל מוצר עד מתי הוא בתוקף.
+- **יחידות או ק"ג**: ירקות, פירות, בשר ודגים נמדדים בק"ג כברירת מחדל.
 - **מסך "חסכתי"** מראה כמה כסף הצלתם החודש (מוצרים שנאכלו ממש לפני שפגו) וכמה נזרק.
 - **הרשמה וכניסה עם אימות כפול, בלי סיסמה**: מספר טלפון וקוד SMS (גורם ראשון), ואז טביעת אצבע / זיהוי פנים או קוד אפליקציה בן 4 ספרות (גורם שני). הרשמה וכניסה הן אותו מסלול, והאפליקציה ננעלת בכל פתיחה.
 - כפתורים גדולים, עברית מימין לשמאל, מצב כהה.
@@ -38,9 +45,12 @@
 | התראות לפני תפוגה עם כפתורי פעולה | ✅ |
 | "חסר לכם X?" לפי הרגלי קנייה | ✅ |
 | מסך חיסכון חודשי | ✅ |
+| מתכונים לפי מה שעומד לפוג | ✅ |
+| רשימת קניות שמתמלאת לבד | ✅ |
+| תאריך תוקף מלוח שנה, יחידות / ק"ג | ✅ |
+| גרסה לשימוש בדפדפן, כניסה עם שם בלבד | ✅ |
 | הרשמה וכניסה: SMS + ביומטרי / קוד אפליקציה | ✅ (צריך להפעיל SMS ב-Supabase) |
 | סנכרון בין בני הבית | בהמשך |
-| מתכונים ממה שעומד לפוג | בהמשך |
 | בוט וואטסאפ למי שלא רוצה עוד אפליקציה | בהמשך |
 
 ## טכנולוגיה
@@ -52,9 +62,9 @@
 
 ```
 src/
-  app/            מסכים (Expo Router): מה יש בבית, הוספה, חסכתי, בדיקת קבלה, עריכת מוצר
+  app/            מסכים (Expo Router): מה יש בבית, הוספה, מתכונים, קניות, חסכתי, בדיקת קבלה, עריכת מוצר
   components/     רכיבי ממשק: שורת מוצר, בחירת תוקף, בחירת סוג, שאלת הרגל
-  domain/         לוגיקה טהורה ונבדקת: קטגוריות, תאריכים, הערכת תוקף, חיסכון, הרגלים
+  domain/         לוגיקה טהורה ונבדקת: קטגוריות, תאריכים, הערכת תוקף, חיסכון, הרגלים, מתכונים
   services/       מצלמה, קריאת קבלה, תזכורות
   store/          מצב האפליקציה
 supabase/functions/parse-receipt/   השרת שקורא קבלות עם Claude
@@ -86,7 +96,11 @@ npm run typecheck
 
 ### מצב דמו
 
-הדמו באוויר מתעדכן עם `./scripts/deploy-demo.sh`.
+שתי הגרסאות באוויר (הדמו ב-`/freshly/` והגרסה לשימוש ב-`/freshly/app/`) מתעדכנות עם `./scripts/deploy-demo.sh`.
+
+### מצב מקומי
+
+`EXPO_PUBLIC_MODE=local` בונה את הגרסה לשימוש: נרשמים עם שם בלבד, אין SMS, אין שרת ואין מסד נתונים. המלאי, רשימת הקניות וההיסטוריה נשמרים על המכשיר בלבד.
 
 כל עוד `EXPO_PUBLIC_SUPABASE_URL` לא מוגדר (או כש-`EXPO_PUBLIC_DEMO=1`), האפליקציה רצה בלי שרת: קוד ה-SMS הוא `123456`, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא.
 
@@ -103,11 +117,11 @@ npm run typecheck
 
 ## English summary
 
-**[Try the live demo](https://shaharsolomon.github.io/freshly/)** (sign-in code `123456`).
+**[Use it](https://shaharsolomon.github.io/freshly/app/)** (name only, data stays in your browser) · **[Demo with sample data](https://shaharsolomon.github.io/freshly/)** (sign-in code `123456`).
 
 > **Portfolio project, not a live app.** No backend is deployed, so you can't sign up with a real phone number. Running the code without configuration starts it in **demo mode**: the SMS code is `123456`, the fingerprint check is simulated, receipt scanning returns a sample receipt, and the pantry starts with sample data. Try it with `npm install && npx expo start`, then press `w` for the browser or scan the QR code with Expo Go.
 
-**freshly** helps households eat what they already have before it spoils. Snap a supermarket receipt, and Claude reads the Hebrew line items, categorizes them and estimates each item's use-by date. The app then sends a morning-before reminder with one-tap *eaten / still have / thrown* actions, learns buying habits to ask "out of cottage cheese? how many are left?", and shows how much money was rescued this month.
+**freshly** helps households eat what they already have before it spoils. Snap a supermarket receipt, and Claude reads the Hebrew line items, categorizes them and estimates each item's use-by date. The app then sends a morning-before reminder with one-tap *eaten / still have / thrown* actions, learns buying habits to ask "out of cottage cheese? how many are left?", suggests recipes that use up what is about to expire, keeps one shopping list that fills itself (finished items, "ran out" answers, missing recipe ingredients), and shows how much money was rescued this month. Items can be counted in units or kilograms, and the expiry date can be picked from a calendar or estimated per product.
 
 Built with Expo (React Native, TypeScript, Expo Router), Zustand with on-device persistence, local notifications, and a Supabase Edge Function that calls the Claude API with structured outputs so the API key never ships in the app. Passwordless sign-up with two factors: an SMS code (Supabase phone auth), then fingerprint / face or a 4-digit app code, asked again on every launch. Hebrew-first, RTL, large tap targets.
 

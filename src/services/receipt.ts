@@ -10,6 +10,8 @@ const API_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 interface ParsedLine {
   name: string;
   quantity: number;
+  /** Older deployments of the function do not send it. */
+  unit?: 'unit' | 'kg';
   price: number | null;
   category: string;
   shelf_life_days: number | null;
@@ -51,11 +53,13 @@ export function linesToDrafts(lines: ParsedLine[], purchasedAt: Date = new Date(
       const category: CategoryId = l.category in CATEGORIES ? (l.category as CategoryId) : guessCategory(l.name);
       const expiresOn = l.shelf_life_days
         ? toDateKey(addDays(purchasedAt, l.shelf_life_days))
-        : estimateExpiry(category, purchasedAt);
+        : estimateExpiry(category, purchasedAt, l.name);
+      const byWeight = l.unit === 'kg';
       return {
         name: l.name.trim(),
         category,
-        quantity: Math.max(1, Math.round(l.quantity || 1)),
+        quantity: byWeight ? Math.max(0.1, Math.round((l.quantity || 1) * 10) / 10) : Math.max(1, Math.round(l.quantity || 1)),
+        unit: byWeight ? ('kg' as const) : ('unit' as const),
         price: l.price ?? undefined,
         expiresOn,
         expirySource: 'estimated' as const,

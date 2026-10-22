@@ -44,3 +44,11 @@ export function urgencyOf(days: number): Urgency {
   if (days <= 4) return 'soon';
   return 'fine';
 }
+
+const WEEKDAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+
+/** "יום ה׳ 24.10": short enough for a list row, clear enough to match the package. */
+export function formatDate(dateKey: string): string {
+  const d = fromDateKey(dateKey);
+  return `יום ${WEEKDAYS[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}`;
+}

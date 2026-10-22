@@ -6,7 +6,9 @@ import { HabitPrompt } from '@/components/HabitPrompt';
 import { ItemRow } from '@/components/ItemRow';
 import { daysUntil } from '@/domain/dates';
 import { findMissing } from '@/domain/habits';
+import { RESCUE_SOON_DAYS } from '@/domain/recipes';
 import type { PantryItem } from '@/domain/types';
+import { IS_LOCAL } from '@/services/demo';
 import { usePantry } from '@/store/pantry';
 import { MIN_TAP, radius, spacing, useTheme } from '@/theme';
 
@@ -33,6 +35,11 @@ export default function HomeScreen() {
     return groups.filter((g) => g.data.length > 0);
   }, [items]);
 
+  const soon = useMemo(
+    () => items.filter((i) => i.status === 'active' && daysUntil(i.expiresOn) <= RESCUE_SOON_DAYS && daysUntil(i.expiresOn) >= 0).length,
+    [items],
+  );
+
   const suggestion = useMemo(() => {
     const now = Date.now();
     const active = items.filter((i) => i.status === 'active');
@@ -47,14 +54,16 @@ export default function HomeScreen() {
         <Text style={styles.emptyEmoji}>🧺</Text>
         <Text style={[styles.emptyTitle, { color: theme.text }]}>עוד אין כאן מוצרים</Text>
         <Text style={[styles.emptySub, { color: theme.muted }]}>
-          מצלמים את הקבלה מהסופר, ואנחנו נזכיר לכם לפני שמשהו מתקלקל.
+          {IS_LOCAL
+            ? 'מוסיפים את מה שיש במקרר, ואנחנו נראה לכם מה צריך לאכול קודם.'
+            : 'מצלמים את הקבלה מהסופר, ואנחנו נזכיר לכם לפני שמשהו מתקלקל.'}
         </Text>
         <Pressable
           onPress={() => router.push('/add')}
           style={[styles.cta, { backgroundColor: theme.primary }]}
           accessibilityRole="button"
         >
-          <Text style={[styles.ctaText, { color: theme.primaryText }]}>📷 סריקת קבלה ראשונה</Text>
+          <Text style={[styles.ctaText, { color: theme.primaryText }]}>{IS_LOCAL ? '➕ להוסיף מוצרים' : '📷 סריקת קבלה ראשונה'}</Text>
         </Pressable>
       </View>
     );
@@ -66,7 +75,23 @@ export default function HomeScreen() {
       contentContainerStyle={styles.list}
       sections={sections}
       keyExtractor={(item) => item.id}
-      ListHeaderComponent={suggestion ? <HabitPrompt suggestion={suggestion} /> : undefined}
+      ListHeaderComponent={
+        <>
+          {suggestion ? <HabitPrompt suggestion={suggestion} /> : null}
+          {soon > 0 ? (
+            <Pressable
+              onPress={() => router.push('/recipes')}
+              style={[styles.banner, { backgroundColor: theme.surface, borderColor: theme.urgent }]}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.bannerText, { color: theme.text }]}>
+                🍳 {soon === 1 ? 'מוצר אחד עומד' : `${soon} מוצרים עומדים`} לפוג. מה אפשר לבשל מהם?
+              </Text>
+              <Text style={{ color: theme.primary, fontWeight: '700' }}>למתכונים ←</Text>
+            </Pressable>
+          ) : null}
+        </>
+      }
       renderSectionHeader={({ section }) => (
         <Text style={[styles.sectionTitle, { color: theme.muted }]}>
           {section.title} · {section.data.length}
@@ -88,6 +113,8 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   list: { padding: spacing.lg, paddingBottom: spacing.xl * 2 },
   sectionTitle: { fontSize: 14, fontWeight: '700', marginTop: spacing.md, marginBottom: spacing.sm },
+  banner: { borderWidth: 1.5, borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.lg, gap: spacing.xs },
+  bannerText: { fontSize: 15, fontWeight: '600', lineHeight: 21 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
   emptyEmoji: { fontSize: 64 },
   emptyTitle: { fontSize: 22, fontWeight: '700', marginTop: spacing.md },

@@ -5,11 +5,16 @@ export type ItemStatus = 'active' | 'eaten' | 'thrown';
 /** Where the expiry date came from, so the UI can say "estimated" when it is a guess. */
 export type ExpirySource = 'estimated' | 'manual';
 
+/** Countable things ("3 yogurts") or weighed produce and meat ("1.5 kg tomatoes"). */
+export type Unit = 'unit' | 'kg';
+
 export interface PantryItem {
   id: string;
   name: string;
   category: CategoryId;
   quantity: number;
+  /** Missing on items saved before units existed; those are counted in units. */
+  unit?: Unit;
   /** Price in NIS for the whole quantity, if known. */
   price?: number;
   /** ISO date-time the item entered the house. */
@@ -29,6 +34,7 @@ export interface DraftItem {
   name: string;
   category: CategoryId;
   quantity: number;
+  unit?: Unit;
   price?: number;
   expiresOn: string;
   expirySource: ExpirySource;

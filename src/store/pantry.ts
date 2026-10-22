@@ -4,8 +4,10 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { daysUntil } from '@/domain/dates';
 import { normalizeName, type Purchase } from '@/domain/habits';
-import { demoPantry, IS_DEMO } from '@/services/demo';
+import { demoPantry, IS_DEMO, IS_LOCAL } from '@/services/demo';
 import type { DraftItem, PantryItem } from '@/domain/types';
+
+import { useShopping } from './shopping';
 
 interface PantryState {
   items: PantryItem[];
@@ -13,8 +15,12 @@ interface PantryState {
   /** Habit keys the user said "not now" to, with the date, so we don't nag. */
   snoozed: Record<string, string>;
   addItems: (drafts: DraftItem[]) => PantryItem[];
-  updateItem: (id: string, patch: Partial<Pick<PantryItem, 'name' | 'category' | 'quantity' | 'price' | 'expiresOn' | 'expirySource'>>) => void;
-  /** Mark one unit as eaten or thrown. The item closes when the last unit goes. */
+  updateItem: (id: string, patch: Partial<Pick<PantryItem, 'name' | 'category' | 'quantity' | 'unit' | 'price' | 'expiresOn' | 'expirySource'>>) => void;
+  /**
+   * Mark one unit as eaten or thrown. The item closes when the last unit goes,
+   * and weighed items (kg) close all at once. When nothing like it is left at
+   * home, it goes on the shopping list.
+   */
   resolve: (id: string, status: 'eaten' | 'thrown') => void;
   undoResolve: (id: string) => void;
   removeItem: (id: string) => void;
@@ -47,11 +53,12 @@ export const usePantry = create<PantryState>()(
         if (!item || item.status !== 'active') return;
         const now = new Date().toISOString();
         const daysLeft = daysUntil(item.expiresOn);
-        const unitPrice = item.price !== undefined ? item.price / Math.max(1, item.quantity) : undefined;
+        const partial = item.unit !== 'kg' && item.quantity > 1;
+        const unitPrice = item.price !== undefined && partial ? item.price / item.quantity : item.price;
         const closed: PantryItem = {
           ...item,
-          id: item.quantity > 1 ? newId() : item.id,
-          quantity: 1,
+          id: partial ? newId() : item.id,
+          quantity: partial ? 1 : item.quantity,
           price: unitPrice,
           status,
           resolvedAt: now,
@@ -59,7 +66,7 @@ export const usePantry = create<PantryState>()(
         };
         set((s) => ({
           items:
-            item.quantity > 1
+            partial
               ? [
                   ...s.items.map((i) =>
                     i.id === id ? { ...i, quantity: i.quantity - 1, price: unitPrice !== undefined ? unitPrice * (i.quantity - 1) : undefined } : i,
@@ -68,21 +75,29 @@ export const usePantry = create<PantryState>()(
                 ]
               : s.items.map((i) => (i.id === id ? closed : i)),
         }));
+        if (!partial) {
+          const key = normalizeName(item.name);
+          const stillHave = get().items.some((i) => i.status === 'active' && normalizeName(i.name) === key);
+          if (!stillHave) useShopping.getState().add(item.name, status === 'eaten' ? 'finished' : 'thrown');
+        }
       },
 
-      undoResolve: (id) =>
+      undoResolve: (id) => {
+        const item = get().items.find((i) => i.id === id);
+        if (item) useShopping.getState().removeAuto(item.name);
         set((s) => ({
           items: s.items.map((i) =>
             i.id === id ? { ...i, status: 'active', resolvedAt: undefined, daysLeftAtResolve: undefined } : i,
           ),
-        })),
+        }));
+      },
 
       removeItem: (id) => set((s) => ({ items: s.items.filter((i) => i.id !== id) })),
 
       snoozeHabit: (key) => set((s) => ({ snoozed: { ...s.snoozed, [key]: new Date().toISOString() } })),
     }),
     {
-      name: IS_DEMO ? 'freshly-demo' : 'freshly-pantry',
+      name: IS_DEMO ? 'freshly-demo' : IS_LOCAL ? 'freshly-local' : 'freshly-pantry',
       version: 1,
       storage: createJSONStorage(() => AsyncStorage),
     },

@@ -1,8 +1,9 @@
 import { guessCategory } from './categories';
 import { addDays, daysUntil, describeDaysLeft, toDateKey } from './dates';
-import { estimateExpiry } from './expiry';
+import { estimateExpiry, explainExpiry, formatQuantity } from './expiry';
 import { findMissing, normalizeName, type Purchase } from './habits';
 import { formatLocal, toE164 } from './phone';
+import { suggestRecipes } from './recipes';
 import { summarize } from './savings';
 import type { PantryItem } from './types';
 
@@ -119,5 +120,52 @@ describe('phone numbers', () => {
 
   it('formats back for display', () => {
     expect(formatLocal('+972501234567')).toBe('050-123-4567');
+  });
+});
+
+describe('expiry by product', () => {
+  const today = new Date(2026, 9, 22);
+  it('refines the category default by name', () => {
+    expect(estimateExpiry('meat', today, 'חזה עוף')).toBe(toDateKey(addDays(today, 2)));
+    expect(estimateExpiry('meat', today, 'בשר טחון')).toBe(toDateKey(addDays(today, 1)));
+    expect(estimateExpiry('vegetables', today, 'בצל')).toBe(toDateKey(addDays(today, 30)));
+    expect(estimateExpiry('vegetables', today, 'חסה')).toBe(toDateKey(addDays(today, 4)));
+  });
+  it('keeps frozen food frozen', () => {
+    expect(estimateExpiry('frozen', today, 'חזה עוף קפוא')).toBe(toDateKey(addDays(today, 90)));
+  });
+  it('explains where the estimate comes from', () => {
+    expect(explainExpiry('meat', 'פרגיות')).toContain('עוף טרי');
+  });
+  it('formats units and kilograms', () => {
+    expect(formatQuantity(1, 'unit')).toBe('');
+    expect(formatQuantity(3, 'unit')).toBe('×3');
+    expect(formatQuantity(1.5, 'kg')).toBe('1.5 ק״ג');
+  });
+});
+
+describe('recipes', () => {
+  const today = new Date(2026, 9, 22);
+  const item = (name: string, days: number): PantryItem => ({
+    id: name,
+    name,
+    category: guessCategory(name),
+    quantity: 1,
+    addedAt: today.toISOString(),
+    expiresOn: toDateKey(addDays(today, days)),
+    expirySource: 'estimated',
+    status: 'active',
+  });
+
+  it('puts recipes that rescue expiring items first', () => {
+    const matches = suggestRecipes([item('ביצים', 20), item('עגבניות', 1), item('פסטה', 200)], today);
+    expect(matches[0].rescues.map((i) => i.name)).toEqual(['עגבניות']);
+    expect(matches.find((m) => m.recipe.id === 'shakshuka')?.uses.map((i) => i.name).sort()).toEqual(['ביצים', 'עגבניות']);
+  });
+  it('never counts staples as missing and skips recipes with nothing at home', () => {
+    const matches = suggestRecipes([item('בננות', 2)], today);
+    const cake = matches.find((m) => m.recipe.id === 'banana-cake');
+    expect(cake?.missing.map((i) => i.name)).toEqual(['ביצים']);
+    expect(matches.some((m) => m.recipe.id === 'schnitzel')).toBe(false);
   });
 });

@@ -5,13 +5,18 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, Sc
 import { CategoryPicker } from '@/components/CategoryPicker';
 import { ExpiryPicker } from '@/components/ExpiryPicker';
 import { guessCategory, type CategoryId } from '@/domain/categories';
-import { estimateExpiry } from '@/domain/expiry';
+import { QuantityPicker } from '@/components/QuantityPicker';
+import { defaultUnit, estimateExpiry, explainExpiry } from '@/domain/expiry';
+import type { Unit } from '@/domain/types';
 import { captureReceipt } from '@/services/camera';
-import { demoReceipt, IS_DEMO } from '@/services/demo';
+import { demoReceipt, IS_DEMO, IS_LOCAL } from '@/services/demo';
 import { isReceiptScanConfigured, parseReceipt, ReceiptError } from '@/services/receipt';
 import { useDrafts } from '@/store/drafts';
 import { usePantry } from '@/store/pantry';
 import { MIN_TAP, radius, spacing, useTheme } from '@/theme';
+
+/** Quick-add suggestions alongside the purchase history. */
+const COMMON_ITEMS = ['קוטג׳', 'חלב', 'לחם', 'ביצים', 'עגבניות', 'מלפפונים', 'חזה עוף', 'יוגורט', 'גבינה צהובה', 'חומוס'];
 
 export default function AddScreen() {
   const theme = useTheme();
@@ -24,6 +29,8 @@ export default function AddScreen() {
   const [category, setCategory] = useState<CategoryId>('other');
   const [categoryTouched, setCategoryTouched] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [unit, setUnit] = useState<Unit>('unit');
+  const [unitTouched, setUnitTouched] = useState(false);
   const [expiresOn, setExpiresOn] = useState(estimateExpiry('other'));
   const [expiryTouched, setExpiryTouched] = useState(false);
   const [justAdded, setJustAdded] = useState<string | null>(null);
@@ -45,11 +52,15 @@ export default function AddScreen() {
     setName(text);
     setJustAdded(null);
     // Category and expiry follow the name until the user picks them by hand.
+    const guessed = categoryTouched ? category : guessCategory(text);
     if (!categoryTouched) {
-      const guessed = guessCategory(text);
       setCategory(guessed);
-      if (!expiryTouched) setExpiresOn(estimateExpiry(guessed));
+      if (!unitTouched) {
+        setUnit(defaultUnit(guessed));
+        setQuantity(1);
+      }
     }
+    if (!expiryTouched) setExpiresOn(estimateExpiry(guessed, new Date(), text));
   };
 
   const reset = () => {
@@ -57,13 +68,26 @@ export default function AddScreen() {
     setCategory('other');
     setCategoryTouched(false);
     setQuantity(1);
+    setUnit('unit');
+    setUnitTouched(false);
     setExpiresOn(estimateExpiry('other'));
     setExpiryTouched(false);
   };
 
+  // In local mode a chip adds the item right away; there is no receipt to fill the pantry.
+  const quickAdd = (itemName: string) => {
+    const guessed = guessCategory(itemName);
+    addItems([
+      { name: itemName, category: guessed, quantity: 1, unit: defaultUnit(guessed), expiresOn: estimateExpiry(guessed, new Date(), itemName), expirySource: 'estimated' },
+    ]);
+    setJustAdded(itemName);
+  };
+  // Recent purchases first, topped up with common products so there is always something to tap.
+  const chips = IS_LOCAL ? [...new Set([...recent, ...COMMON_ITEMS])].slice(0, 12) : recent;
+
   const save = () => {
     if (!name.trim()) return;
-    addItems([{ name: name.trim(), category, quantity, expiresOn, expirySource: expiryTouched ? 'manual' : 'estimated' }]);
+    addItems([{ name: name.trim(), category, quantity, unit, expiresOn, expirySource: expiryTouched ? 'manual' : 'estimated' }]);
     setJustAdded(name.trim());
     reset();
   };
@@ -101,6 +125,8 @@ export default function AddScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+        {IS_LOCAL ? null : (
+          <>
         <Pressable
           onPress={() => scan('camera')}
           onLongPress={() => scan('library')}
@@ -124,19 +150,26 @@ export default function AddScreen() {
         <Pressable onPress={() => scan('library')} disabled={scanning} style={styles.link} accessibilityRole="button">
           <Text style={[styles.linkText, { color: theme.primary }]}>או לבחור תמונה מהגלריה</Text>
         </Pressable>
+          </>
+        )}
 
-        <Text style={[styles.heading, { color: theme.text }]}>הוספה ידנית</Text>
+        <Text style={[styles.heading, { color: theme.text }]}>{IS_LOCAL ? 'הוספה בלחיצה' : 'הוספה ידנית'}</Text>
+        {IS_LOCAL ? (
+          <Text style={[styles.hint, { color: theme.muted }]}>לחיצה על מוצר מכניסה אותו למלאי עם תוקף משוער. אפשר לתקן אחר כך במסך הבית.</Text>
+        ) : null}
 
-        {recent.length > 0 && !name ? (
+        {chips.length > 0 && !name ? (
           <View style={styles.recent}>
-            {recent.map((r) => (
-              <Pressable key={r} onPress={() => onNameChange(r)} style={[styles.recentChip, { borderColor: theme.border, backgroundColor: theme.surface }]}>
+            {chips.map((r) => (
+              <Pressable key={r} onPress={() => (IS_LOCAL ? quickAdd(r) : onNameChange(r))} accessibilityRole="button" style={[styles.recentChip, { borderColor: theme.border, backgroundColor: theme.surface }]}>
                 <Text style={{ color: theme.text, fontSize: 15 }}>{r}</Text>
               </Pressable>
             ))}
           </View>
         ) : null}
 
+        {IS_LOCAL && justAdded && !name ? <Text style={[styles.added, { color: theme.primary, marginTop: 0, marginBottom: spacing.md }]}>✓ {justAdded} נוסף למלאי</Text> : null}
+        {IS_LOCAL ? <Text style={[styles.label, { color: theme.muted, marginTop: 0 }]}>או לכתוב מוצר אחר</Text> : null}
         <TextInput
           value={name}
           onChangeText={onNameChange}
@@ -153,13 +186,17 @@ export default function AddScreen() {
           onChange={(c) => {
             setCategory(c);
             setCategoryTouched(true);
-            if (!expiryTouched) setExpiresOn(estimateExpiry(c));
+            if (!unitTouched) setUnit(defaultUnit(c));
+            if (!expiryTouched) setExpiresOn(estimateExpiry(c, new Date(), name));
           }}
         />
 
-        <Text style={[styles.label, { color: theme.muted }]}>בתוקף עד{expiryTouched ? '' : ' (משוער, אפשר לשנות)'}</Text>
+        <Text style={[styles.label, { color: theme.muted }]}>
+          בתוקף עד{expiryTouched ? '' : ' (משוער. יש תאריך על האריזה? לחצו על התאריך)'}
+        </Text>
         <ExpiryPicker
           value={expiresOn}
+          hint={expiryTouched ? undefined : explainExpiry(category, name)}
           onChange={(d) => {
             setExpiresOn(d);
             setExpiryTouched(true);
@@ -167,11 +204,15 @@ export default function AddScreen() {
         />
 
         <Text style={[styles.label, { color: theme.muted }]}>כמות</Text>
-        <View style={styles.stepper}>
-          <StepButton label="−" onPress={() => setQuantity((q) => Math.max(1, q - 1))} />
-          <Text style={[styles.qty, { color: theme.text }]}>{quantity}</Text>
-          <StepButton label="+" onPress={() => setQuantity((q) => q + 1)} />
-        </View>
+        <QuantityPicker
+          quantity={quantity}
+          unit={unit}
+          onChange={(q, u) => {
+            setQuantity(q);
+            setUnit(u);
+            setUnitTouched(true);
+          }}
+        />
 
         <Pressable
           onPress={save}
@@ -181,20 +222,12 @@ export default function AddScreen() {
         >
           <Text style={[styles.saveText, { color: theme.primaryText }]}>הוספה למלאי</Text>
         </Pressable>
-        {justAdded ? <Text style={[styles.added, { color: theme.primary }]}>✓ {justAdded} נוסף למלאי</Text> : null}
+        {justAdded && !IS_LOCAL ? <Text style={[styles.added, { color: theme.primary }]}>✓ {justAdded} נוסף למלאי</Text> : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-function StepButton({ label, onPress }: { label: string; onPress: () => void }) {
-  const theme = useTheme();
-  return (
-    <Pressable onPress={onPress} style={[styles.step, { borderColor: theme.border, backgroundColor: theme.surface }]} accessibilityRole="button">
-      <Text style={{ fontSize: 24, color: theme.text }}>{label}</Text>
-    </Pressable>
-  );
-}
 
 const styles = StyleSheet.create({
   page: { padding: spacing.lg, paddingBottom: spacing.xl * 2 },
@@ -204,13 +237,11 @@ const styles = StyleSheet.create({
   link: { alignSelf: 'center', padding: spacing.md, minHeight: MIN_TAP, justifyContent: 'center' },
   linkText: { fontSize: 15, fontWeight: '600' },
   heading: { fontSize: 18, fontWeight: '700', marginTop: spacing.lg, marginBottom: spacing.sm },
+  hint: { fontSize: 14, marginBottom: spacing.md },
   recent: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   recentChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.lg, borderWidth: 1 },
   input: { minHeight: 52, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing.lg, fontSize: 17 },
   label: { fontSize: 14, fontWeight: '600', marginTop: spacing.lg, marginBottom: spacing.xs },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  step: { width: MIN_TAP, height: MIN_TAP, borderRadius: MIN_TAP / 2, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  qty: { fontSize: 22, fontWeight: '700', minWidth: 32, textAlign: 'center' },
   save: { marginTop: spacing.xl, minHeight: 56, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
   saveText: { fontSize: 18, fontWeight: '700' },
   added: { textAlign: 'center', marginTop: spacing.md, fontSize: 15, fontWeight: '600' },

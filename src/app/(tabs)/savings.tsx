@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { RESCUE_WINDOW_DAYS, startOfMonth, summarize } from '@/domain/savings';
 import { formatLocal } from '@/domain/phone';
 import { signOut } from '@/services/auth';
+import { IS_LOCAL } from '@/services/demo';
 import { clearPin } from '@/services/deviceLock';
 import { usePantry } from '@/store/pantry';
 import { useSession } from '@/store/session';
@@ -45,10 +46,17 @@ export default function SavingsScreen() {
         "הצלה" היא מוצר שסימנתם "אכלנו" כשנשארו לו {RESCUE_WINDOW_DAYS} ימים או פחות. כשאין מחיר מהקבלה, אנחנו משתמשים במחיר ממוצע לסוג המוצר.
       </Text>
 
-      {user ? (
+      {user && IS_LOCAL ? (
+        <View style={[styles.account, { borderTopColor: theme.border, flexDirection: 'column', alignItems: 'stretch', gap: spacing.xs }]}>
+          <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>שלום{user.name ? ` ${user.name}` : ''} 👋</Text>
+          <Text style={{ color: theme.muted, fontSize: 13, lineHeight: 19 }}>
+            הכל נשמר רק בטלפון הזה, בדפדפן הזה. מחיקת נתוני הדפדפן תמחק גם את המלאי.
+          </Text>
+        </View>
+      ) : user ? (
         <View style={[styles.account, { borderTopColor: theme.border }]}>
           <Text style={{ color: theme.muted, fontSize: 14 }}>
-            מחוברים{user.name ? ` כ${user.name}` : ''} · {formatLocal(user.phone)}
+            מחוברים{user.name ? ` כ${user.name}` : ''}{user.phone ? ` · ${formatLocal(user.phone)}` : ''}
           </Text>
           <Pressable
             onPress={async () => {
