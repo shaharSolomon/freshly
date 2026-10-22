@@ -25,14 +25,14 @@ export default function SavingsScreen() {
       </View>
 
       <View style={styles.tiles}>
-        <Tile label="נזרק החודש" value={`₪${month.wastedValue}`} sub={`${month.wastedCount} מוצרים`} color={theme.danger} />
+        <Tile label="נזרק החודש" value={`₪${month.wastedValue}`} sub={countLabel(month.wastedCount)} color={theme.danger} />
         <Tile label="נוצל במלואו" value={usedShare === null ? '—' : `${usedShare}%`} sub="מכל מה שסומן החודש" color={theme.text} />
       </View>
 
       <View style={[styles.box, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <Text style={[styles.boxTitle, { color: theme.text }]}>מאז שהתחלתם</Text>
-        <Text style={[styles.boxLine, { color: theme.muted }]}>הצלתם ₪{allTime.rescuedValue} ב-{allTime.rescuedCount} מוצרים</Text>
-        <Text style={[styles.boxLine, { color: theme.muted }]}>נזרקו ₪{allTime.wastedValue} ב-{allTime.wastedCount} מוצרים</Text>
+        <Text style={[styles.boxLine, { color: theme.muted }]}>הצלתם ₪{allTime.rescuedValue} ב{countLabel(allTime.rescuedCount)}</Text>
+        <Text style={[styles.boxLine, { color: theme.muted }]}>נזרקו ₪{allTime.wastedValue} ב{countLabel(allTime.wastedCount)}</Text>
       </View>
 
       <Text style={[styles.note, { color: theme.muted }]}>
@@ -40,6 +40,10 @@ export default function SavingsScreen() {
       </Text>
     </ScrollView>
   );
+}
+
+function countLabel(n: number): string {
+  return n === 1 ? 'מוצר אחד' : `${n} מוצרים`;
 }
 
 function Tile({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {

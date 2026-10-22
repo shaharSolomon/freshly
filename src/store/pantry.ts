@@ -4,6 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { daysUntil } from '@/domain/dates';
 import { normalizeName, type Purchase } from '@/domain/habits';
+import { demoPantry, IS_DEMO } from '@/services/demo';
 import type { DraftItem, PantryItem } from '@/domain/types';
 
 interface PantryState {
@@ -27,8 +28,7 @@ function newId(): string {
 export const usePantry = create<PantryState>()(
   persist(
     (set, get) => ({
-      items: [],
-      purchases: [],
+      ...(IS_DEMO ? demoPantry() : { items: [], purchases: [] }),
       snoozed: {},
 
       addItems: (drafts) => {
@@ -82,7 +82,7 @@ export const usePantry = create<PantryState>()(
       snoozeHabit: (key) => set((s) => ({ snoozed: { ...s.snoozed, [key]: new Date().toISOString() } })),
     }),
     {
-      name: 'freshly-pantry',
+      name: IS_DEMO ? 'freshly-demo' : 'freshly-pantry',
       version: 1,
       storage: createJSONStorage(() => AsyncStorage),
     },

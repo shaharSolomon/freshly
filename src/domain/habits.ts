@@ -38,7 +38,9 @@ export function normalizeName(name: string): string {
  * pantry. These drive the "missing cottage? how many are left?" prompt.
  */
 export function findMissing(purchases: Purchase[], activeItems: PantryItem[], now: Date = new Date()): MissingSuggestion[] {
-  const inStock = new Set(activeItems.map((i) => normalizeName(i.name)));
+  // "חומוס אחלה" in the fridge covers the "חומוס" habit, and the other way round.
+  const stock = activeItems.map((i) => normalizeName(i.name));
+  const inStock = (key: string) => stock.some((s) => s === key || s.startsWith(`${key} `) || key.startsWith(`${s} `));
   const byKey = new Map<string, Purchase[]>();
   for (const p of purchases) {
     const list = byKey.get(p.key) ?? [];
@@ -48,7 +50,7 @@ export function findMissing(purchases: Purchase[], activeItems: PantryItem[], no
 
   const suggestions: MissingSuggestion[] = [];
   for (const [key, list] of byKey) {
-    if (inStock.has(key)) continue;
+    if (inStock(key)) continue;
     // One receipt can hold the same product twice; count distinct days.
     const days = [...new Set(list.map((p) => Math.floor(new Date(p.at).getTime() / DAY_MS)))].sort((a, b) => a - b);
     if (days.length < MIN_PURCHASES) continue;

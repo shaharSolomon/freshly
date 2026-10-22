@@ -93,6 +93,7 @@ describe('habits', () => {
   it('stays quiet when the product is in stock or was bought recently', () => {
     expect(findMissing(weekly('קוטג׳', [2, 3, 4]), [item({ name: 'קוטג׳' })], today)).toEqual([]);
     expect(findMissing(weekly('קוטג׳', [0, 1, 2]), [], today)).toEqual([]);
+    expect(findMissing(weekly('חומוס', [2, 3, 4]), [item({ name: 'חומוס אחלה' })], today)).toEqual([]);
   });
 
   it('needs a few purchases before it calls something a habit', () => {

@@ -7,6 +7,7 @@ import { ExpiryPicker } from '@/components/ExpiryPicker';
 import { guessCategory, type CategoryId } from '@/domain/categories';
 import { estimateExpiry } from '@/domain/expiry';
 import { captureReceipt } from '@/services/camera';
+import { demoReceipt, IS_DEMO } from '@/services/demo';
 import { isReceiptScanConfigured, parseReceipt, ReceiptError } from '@/services/receipt';
 import { useDrafts } from '@/store/drafts';
 import { usePantry } from '@/store/pantry';
@@ -68,6 +69,13 @@ export default function AddScreen() {
   };
 
   const scan = async (source: 'camera' | 'library') => {
+    if (IS_DEMO) {
+      setScanning(true);
+      setDrafts(await demoReceipt());
+      setScanning(false);
+      router.push('/review');
+      return;
+    }
     if (!isReceiptScanConfigured()) {
       Alert.alert('סריקה עוד לא זמינה', 'אפשר להוסיף מוצרים ידנית בינתיים.');
       return;
