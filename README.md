@@ -88,6 +88,13 @@ EXPO_PUBLIC_DEMO=1 npx expo start --web
 
 במצב הזה אין צורך בשרת: קוד ה-SMS הוא `123456`, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא.
 
+### מהקוד לחנויות: מה נשאר לעשות
+
+1. **Supabase**: פותחים פרויקט, מפעילים Phone ב-Authentication עם ספק SMS (למשל Twilio), ופורסים את `parse-receipt` עם מפתח Claude (ראו למעלה).
+2. **`.env`**: ממלאים את שלושת הערכים מ-`.env.example`.
+3. **בנייה לטלפון**: `npx eas-cli@latest login` ואז `npx eas-cli@latest build --profile development` לבדיקה במכשיר, או `--profile preview` לגרסת דמו להפצה לחברים.
+4. **חנויות**: חשבון Apple Developer ($99 לשנה) ו-Google Play Console ($25 פעם אחת), ואז `npx eas-cli@latest build --profile production` ו-`submit`.
+
 </div>
 
 ---
