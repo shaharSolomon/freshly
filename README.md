@@ -53,6 +53,10 @@
 | סנכרון בין בני הבית | בהמשך |
 | בוט וואטסאפ למי שלא רוצה עוד אפליקציה | בהמשך |
 
+## איך הפרויקט נבנה
+
+הפרויקט פותח בעזרת סוכני AI (Claude, באמצעות Claude Code). אני הגדרתי את המוצר: הרעיון, הדרישות, סדרי העדיפויות וחוויית המשתמש. בדקתי כל גרסה עם משתמשים אמיתיים, ואת המשוב שלהם החזרתי לסוכנים. הסוכנים כתבו את הקוד, את הבדיקות ואת התיעוד, והעלו את האתר לאוויר.
+
 ## טכנולוגיה
 
 - **Expo (React Native) + TypeScript**: אפליקציה אחת לאנדרואיד, אייפון ו-web. ניווט עם Expo Router.
@@ -124,5 +128,7 @@ npm run typecheck
 **freshly** helps households eat what they already have before it spoils. Snap a supermarket receipt, and Claude reads the Hebrew line items, categorizes them and estimates each item's use-by date. The app then sends a morning-before reminder with one-tap *eaten / still have / thrown* actions, learns buying habits to ask "out of cottage cheese? how many are left?", suggests recipes that use up what is about to expire, keeps one shopping list that fills itself (finished items, "ran out" answers, missing recipe ingredients), and shows how much money was rescued this month. Items can be counted in units or kilograms, and the expiry date can be picked from a calendar or estimated per product.
 
 Built with Expo (React Native, TypeScript, Expo Router), Zustand with on-device persistence, local notifications, and a Supabase Edge Function that calls the Claude API with structured outputs so the API key never ships in the app. Passwordless sign-up with two factors: an SMS code (Supabase phone auth), then fingerprint / face or a 4-digit app code, asked again on every launch. Hebrew-first, RTL, large tap targets.
+
+**How it was built:** developed with AI agents (Claude, via Claude Code). I owned the product: the idea, requirements, priorities and UX, and I tested each version with real users and fed their feedback back in. The agents wrote the code, tests and docs, and deployed the site.
 
 To run it for real, create a Supabase project with phone auth, deploy `supabase/functions/parse-receipt` with an Anthropic API key, and fill in `.env` from `.env.example`. Tests: `npm test`.
