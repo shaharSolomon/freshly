@@ -4,6 +4,8 @@
 
 **אפליקציה שעוזרת למשפחות להשתמש במה שכבר יש בבית לפני שזה מתקלקל.**
 
+### 👉 [לנסות את הדמו בדפדפן](https://shaharsolomon.github.io/freshly/) · קוד הכניסה: `123456`
+
 > **⚠️ פרויקט לתיק עבודות, לא אפליקציה פעילה.** אין שרת מחובר, כך שאי אפשר להירשם עם מספר טלפון אמיתי. כשמריצים את הקוד בלי הגדרות, האפליקציה עולה אוטומטית ב**מצב דמו**: קוד ה-SMS הוא `123456`, טביעת האצבע מדומה, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא בנתוני דוגמה.
 
 משק בית ישראלי זורק בממוצע אלפי שקלים של אוכל בשנה, בעיקר כי שוכחים מה יש במקרר ומתי זה פג. freshly מצלמת את הקבלה מהסופר, מעריכה לבד מתי כל מוצר יתקלקל, ומזכירה בזמן, כך שהאוכל נאכל ולא נזרק.
@@ -84,6 +86,8 @@ npm run typecheck
 
 ### מצב דמו
 
+הדמו באוויר מתעדכן עם `./scripts/deploy-demo.sh`.
+
 כל עוד `EXPO_PUBLIC_SUPABASE_URL` לא מוגדר (או כש-`EXPO_PUBLIC_DEMO=1`), האפליקציה רצה בלי שרת: קוד ה-SMS הוא `123456`, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא.
 
 ### מהקוד לחנויות: מה נשאר לעשות
@@ -98,6 +102,8 @@ npm run typecheck
 ---
 
 ## English summary
+
+**[Try the live demo](https://shaharsolomon.github.io/freshly/)** (sign-in code `123456`).
 
 > **Portfolio project, not a live app.** No backend is deployed, so you can't sign up with a real phone number. Running the code without configuration starts it in **demo mode**: the SMS code is `123456`, the fingerprint check is simulated, receipt scanning returns a sample receipt, and the pantry starts with sample data. Try it with `npm install && npx expo start`, then press `w` for the browser or scan the QR code with Expo Go.
 
