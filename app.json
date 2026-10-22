@@ -5,9 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "app.freshly"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,10 +17,35 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "app.freshly"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "scheme": "freshly",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-localization",
+        {
+          "supportsRTL": true,
+          "forcesRTL": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {}
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "freshly צריכה גישה למצלמה כדי לסרוק קבלות"
+        }
+      ]
+    ],
+    "extra": {
+      "supportsRTL": true
     }
   }
 }
