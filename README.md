@@ -4,6 +4,8 @@
 
 **אפליקציה שעוזרת למשפחות להשתמש במה שכבר יש בבית לפני שזה מתקלקל.**
 
+> **⚠️ פרויקט לתיק עבודות, לא אפליקציה פעילה.** אין שרת מחובר, כך שאי אפשר להירשם עם מספר טלפון אמיתי. כשמריצים את הקוד בלי הגדרות, האפליקציה עולה אוטומטית ב**מצב דמו**: קוד ה-SMS הוא `123456`, טביעת האצבע מדומה, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא בנתוני דוגמה.
+
 משק בית ישראלי זורק בממוצע אלפי שקלים של אוכל בשנה, בעיקר כי שוכחים מה יש במקרר ומתי זה פג. freshly מצלמת את הקבלה מהסופר, מעריכה לבד מתי כל מוצר יתקלקל, ומזכירה בזמן, כך שהאוכל נאכל ולא נזרק.
 
 <p align="center">
@@ -60,7 +62,7 @@ supabase/functions/parse-receipt/   השרת שקורא קבלות עם Claude
 
 ```bash
 npm install
-npx expo start          # סורקים את ה-QR עם Expo Go בטלפון
+npx expo start          # סורקים את ה-QR עם Expo Go בטלפון, או לוחצים w לדפדפן. עולה במצב דמו, הקוד: 123456
 npm test                # בדיקות הלוגיקה
 npm run typecheck
 ```
@@ -80,13 +82,9 @@ npm run typecheck
 
 ב-Supabase: Authentication ← Providers ← Phone, מפעילים ומחברים ספק SMS (למשל Twilio). זה כל מה שצריך; האפליקציה משתמשת ב-`signInWithOtp` ו-`verifyOtp`. הסשן נשמר ב-Keychain / Keystore של המכשיר.
 
-### אב-טיפוס עם נתוני דוגמה
+### מצב דמו
 
-```bash
-EXPO_PUBLIC_DEMO=1 npx expo start --web
-```
-
-במצב הזה אין צורך בשרת: קוד ה-SMS הוא `123456`, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא.
+כל עוד `EXPO_PUBLIC_SUPABASE_URL` לא מוגדר (או כש-`EXPO_PUBLIC_DEMO=1`), האפליקציה רצה בלי שרת: קוד ה-SMS הוא `123456`, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא.
 
 ### מהקוד לחנויות: מה נשאר לעשות
 
@@ -101,8 +99,10 @@ EXPO_PUBLIC_DEMO=1 npx expo start --web
 
 ## English summary
 
+> **Portfolio project, not a live app.** No backend is deployed, so you can't sign up with a real phone number. Running the code without configuration starts it in **demo mode**: the SMS code is `123456`, the fingerprint check is simulated, receipt scanning returns a sample receipt, and the pantry starts with sample data. Try it with `npm install && npx expo start`, then press `w` for the browser or scan the QR code with Expo Go.
+
 **freshly** helps households eat what they already have before it spoils. Snap a supermarket receipt, and Claude reads the Hebrew line items, categorizes them and estimates each item's use-by date. The app then sends a morning-before reminder with one-tap *eaten / still have / thrown* actions, learns buying habits to ask "out of cottage cheese? how many are left?", and shows how much money was rescued this month.
 
 Built with Expo (React Native, TypeScript, Expo Router), Zustand with on-device persistence, local notifications, and a Supabase Edge Function that calls the Claude API with structured outputs so the API key never ships in the app. Passwordless sign-up with two factors: an SMS code (Supabase phone auth), then fingerprint / face or a 4-digit app code, asked again on every launch. Hebrew-first, RTL, large tap targets.
 
-Run with `npm install && npx expo start`; tests with `npm test`.
+To run it for real, create a Supabase project with phone auth, deploy `supabase/functions/parse-receipt` with an Anthropic API key, and fill in `.env` from `.env.example`. Tests: `npm test`.

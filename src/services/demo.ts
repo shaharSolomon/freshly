@@ -2,8 +2,12 @@ import { addDays, toDateKey } from '@/domain/dates';
 import type { Purchase } from '@/domain/habits';
 import type { DraftItem, PantryItem } from '@/domain/types';
 
-/** Demo builds (EXPO_PUBLIC_DEMO=1) start with a lived-in pantry and fake the receipt scan. */
-export const IS_DEMO = process.env.EXPO_PUBLIC_DEMO === '1';
+/**
+ * Demo builds start with a lived-in pantry, accept a fixed SMS code and fake
+ * the receipt scan. Without a Supabase project configured there is no way to
+ * sign in, so a fresh clone runs in demo mode too.
+ */
+export const IS_DEMO = process.env.EXPO_PUBLIC_DEMO === '1' || !process.env.EXPO_PUBLIC_SUPABASE_URL;
 
 const day = (n: number) => toDateKey(addDays(new Date(), n));
 const ago = (n: number) => addDays(new Date(), -n).toISOString();
