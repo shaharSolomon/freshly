@@ -1,13 +1,19 @@
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { RESCUE_WINDOW_DAYS, startOfMonth, summarize } from '@/domain/savings';
+import { formatLocal } from '@/domain/phone';
+import { signOut } from '@/services/auth';
+import { clearPin } from '@/services/deviceLock';
 import { usePantry } from '@/store/pantry';
-import { radius, spacing, useTheme } from '@/theme';
+import { useSession } from '@/store/session';
+import { MIN_TAP, radius, spacing, useTheme } from '@/theme';
 
 export default function SavingsScreen() {
   const theme = useTheme();
   const items = usePantry((s) => s.items);
+  const user = useSession((s) => s.user);
+  const endSession = useSession((s) => s.signOut);
   const month = useMemo(() => summarize(items, startOfMonth()), [items]);
   const allTime = useMemo(() => summarize(items, new Date(0)), [items]);
 
@@ -38,6 +44,25 @@ export default function SavingsScreen() {
       <Text style={[styles.note, { color: theme.muted }]}>
         "הצלה" היא מוצר שסימנתם "אכלנו" כשנשארו לו {RESCUE_WINDOW_DAYS} ימים או פחות. כשאין מחיר מהקבלה, אנחנו משתמשים במחיר ממוצע לסוג המוצר.
       </Text>
+
+      {user ? (
+        <View style={[styles.account, { borderTopColor: theme.border }]}>
+          <Text style={{ color: theme.muted, fontSize: 14 }}>
+            מחוברים{user.name ? ` כ${user.name}` : ''} · {formatLocal(user.phone)}
+          </Text>
+          <Pressable
+            onPress={async () => {
+              await signOut().catch(() => {});
+              await clearPin();
+              endSession();
+            }}
+            style={styles.signOut}
+            accessibilityRole="button"
+          >
+            <Text style={{ color: theme.danger, fontWeight: '600', fontSize: 15 }}>התנתקות</Text>
+          </Pressable>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -72,4 +97,6 @@ const styles = StyleSheet.create({
   boxTitle: { fontSize: 16, fontWeight: '700' },
   boxLine: { fontSize: 15 },
   note: { fontSize: 13, lineHeight: 19 },
+  account: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  signOut: { minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: spacing.sm },
 });

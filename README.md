@@ -21,7 +21,8 @@
 - **התראה בבוקר שלפני התפוגה** עם שלושה כפתורים: *אכלנו*, *עוד יש*, *נזרק*. המלאי מתעדכן בלי לפתוח את האפליקציה.
 - **לומדת הרגלי קנייה**: אם קונים קוטג' כל שבוע והפעם לא, היא שואלת "חסר לכם קוטג'? כמה יש בבית?" ועונים בלחיצה.
 - **מסך "חסכתי"** מראה כמה כסף הצלתם החודש (מוצרים שנאכלו ממש לפני שפגו) וכמה נזרק.
-- כפתורים גדולים, עברית מימין לשמאל, מצב כהה, ובלי הרשמה בגרסה הראשונה.
+- **הרשמה וכניסה עם אימות כפול, בלי סיסמה**: מספר טלפון וקוד SMS (גורם ראשון), ואז טביעת אצבע / זיהוי פנים או קוד אפליקציה בן 4 ספרות (גורם שני). הרשמה וכניסה הן אותו מסלול, והאפליקציה ננעלת בכל פתיחה.
+- כפתורים גדולים, עברית מימין לשמאל, מצב כהה.
 
 ## מה כבר עובד
 
@@ -33,6 +34,7 @@
 | התראות לפני תפוגה עם כפתורי פעולה | ✅ |
 | "חסר לכם X?" לפי הרגלי קנייה | ✅ |
 | מסך חיסכון חודשי | ✅ |
+| הרשמה וכניסה: SMS + ביומטרי / קוד אפליקציה | ✅ (צריך להפעיל SMS ב-Supabase) |
 | סנכרון בין בני הבית | בהמשך |
 | מתכונים ממה שעומד לפוג | בהמשך |
 | בוט וואטסאפ למי שלא רוצה עוד אפליקציה | בהמשך |
@@ -72,7 +74,19 @@ npm run typecheck
    supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
    supabase functions deploy parse-receipt
    ```
-3. מעתיקים את `.env.example` ל-`.env` וממלאים את כתובת הפונקציה ואת ה-anon key.
+3. מעתיקים את `.env.example` ל-`.env` וממלאים את כתובת הפרויקט, כתובת הפונקציה ואת ה-anon key.
+
+### הפעלת הרשמה עם SMS
+
+ב-Supabase: Authentication ← Providers ← Phone, מפעילים ומחברים ספק SMS (למשל Twilio). זה כל מה שצריך; האפליקציה משתמשת ב-`signInWithOtp` ו-`verifyOtp`. הסשן נשמר ב-Keychain / Keystore של המכשיר.
+
+### אב-טיפוס עם נתוני דוגמה
+
+```bash
+EXPO_PUBLIC_DEMO=1 npx expo start --web
+```
+
+במצב הזה אין צורך בשרת: קוד ה-SMS הוא `123456`, סריקת הקבלה מחזירה קבלה לדוגמה, והמלאי מתחיל מלא.
 
 </div>
 
@@ -82,6 +96,6 @@ npm run typecheck
 
 **freshly** helps households eat what they already have before it spoils. Snap a supermarket receipt, and Claude reads the Hebrew line items, categorizes them and estimates each item's use-by date. The app then sends a morning-before reminder with one-tap *eaten / still have / thrown* actions, learns buying habits to ask "out of cottage cheese? how many are left?", and shows how much money was rescued this month.
 
-Built with Expo (React Native, TypeScript, Expo Router), Zustand with on-device persistence, local notifications, and a Supabase Edge Function that calls the Claude API with structured outputs so the API key never ships in the app. Hebrew-first, RTL, large tap targets, no sign-up.
+Built with Expo (React Native, TypeScript, Expo Router), Zustand with on-device persistence, local notifications, and a Supabase Edge Function that calls the Claude API with structured outputs so the API key never ships in the app. Passwordless sign-up with two factors: an SMS code (Supabase phone auth), then fingerprint / face or a 4-digit app code, asked again on every launch. Hebrew-first, RTL, large tap targets.
 
 Run with `npm install && npx expo start`; tests with `npm test`.

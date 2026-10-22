@@ -2,11 +2,12 @@ import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { I18nManager, Platform } from 'react-native';
+import { AppState, I18nManager, Platform, View } from 'react-native';
 
 import { addDays, toDateKey } from '@/domain/dates';
 import { ACTION_EATEN, ACTION_STILL_HAVE, ACTION_THROWN, setupReminders, syncReminders } from '@/services/reminders';
 import { usePantry } from '@/store/pantry';
+import { useSession } from '@/store/session';
 import { useTheme } from '@/theme';
 
 // Hebrew first. The native side is configured in app.json (expo-localization
@@ -40,8 +41,25 @@ function handleResponse(response: Notifications.NotificationResponse) {
   }
 }
 
+/** Back from the background after this long asks for the second factor again. */
+const RELOCK_AFTER_MS = 5 * 60 * 1000;
+
 export default function RootLayout() {
   const theme = useTheme();
+  const { hydrated, user, secondFactor, unlocked } = useSession();
+  const signedIn = Boolean(user);
+  const enrolled = signedIn && secondFactor !== null;
+  // Where a blocked route sends the user: the next step they still owe.
+  const entry = !signedIn ? '/welcome' : !enrolled ? '/secure' : !unlocked ? '/unlock' : '/';
+
+  useEffect(() => {
+    let leftAt = 0;
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background') leftAt = Date.now();
+      else if (state === 'active' && leftAt && Date.now() - leftAt > RELOCK_AFTER_MS) useSession.getState().lock();
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     setupReminders().catch(() => {});
@@ -60,6 +78,10 @@ export default function RootLayout() {
     };
   }, []);
 
+  // A blank frame for the moment it takes to read the saved session, so a
+  // signed-in user never sees the welcome screen flash by.
+  if (!hydrated) return <View style={{ flex: 1, backgroundColor: theme.background }} />;
+
   return (
     <>
       <StatusBar style="auto" />
@@ -71,9 +93,22 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: theme.background },
         }}
       >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="review" options={{ title: 'בדיקת הקבלה', presentation: 'modal' }} />
-        <Stack.Screen name="item/[id]" options={{ title: 'עריכת מוצר', presentation: 'modal' }} />
+        <Stack.Protected guard={enrolled && unlocked} redirectTo={entry}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="review" options={{ title: 'בדיקת הקבלה', presentation: 'modal' }} />
+          <Stack.Screen name="item/[id]" options={{ title: 'עריכת מוצר', presentation: 'modal' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={!signedIn} redirectTo={entry}>
+          <Stack.Screen name="welcome" options={{ headerShown: false }} />
+          <Stack.Screen name="sign-in" options={{ title: '' }} />
+          <Stack.Screen name="verify" options={{ title: '' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={signedIn && !enrolled} redirectTo={entry}>
+          <Stack.Screen name="secure" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={enrolled && !unlocked} redirectTo={entry}>
+          <Stack.Screen name="unlock" options={{ headerShown: false }} />
+        </Stack.Protected>
       </Stack>
     </>
   );

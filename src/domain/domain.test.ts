@@ -2,6 +2,7 @@ import { guessCategory } from './categories';
 import { addDays, daysUntil, describeDaysLeft, toDateKey } from './dates';
 import { estimateExpiry } from './expiry';
 import { findMissing, normalizeName, type Purchase } from './habits';
+import { formatLocal, toE164 } from './phone';
 import { summarize } from './savings';
 import type { PantryItem } from './types';
 
@@ -98,5 +99,25 @@ describe('habits', () => {
 
   it('needs a few purchases before it calls something a habit', () => {
     expect(findMissing(weekly('קוטג׳', [3, 4]), [], today)).toEqual([]);
+  });
+});
+
+describe('phone numbers', () => {
+  it.each([
+    ['050-123-4567', '+972501234567'],
+    ['0501234567', '+972501234567'],
+    ['+972 50 123 4567', '+972501234567'],
+    ['972541112222', '+972541112222'],
+  ])('%s -> %s', (input, expected) => {
+    expect(toE164(input)).toBe(expected);
+  });
+
+  it('rejects landlines and short numbers', () => {
+    expect(toE164('03-1234567')).toBeNull();
+    expect(toE164('050123')).toBeNull();
+  });
+
+  it('formats back for display', () => {
+    expect(formatLocal('+972501234567')).toBe('050-123-4567');
   });
 });
